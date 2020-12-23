@@ -60,13 +60,29 @@ function Remove-Prefix {
         $range = [Math]::Min($prefix.Length, $name.Length) - 1
         ForEach ($i in (0..$range)) {
             if ($prefix[$i] -ne $name[$i]) {
-                $prefix = $prefix.Substring(0, ($i - 1))
+                $prefix = $prefix.Substring(0, $i)
                 break
             }
         }
         if (!$prefix) { Return }
     }
+    $prefix = [Regex]::Escape($prefix)
 
     $names | Rename-Item -NewName { $_ -replace "${prefix}0*", '' }
 }
 Export-ModuleMember -Function Remove-Prefix
+
+<#
+.SYNOPSIS
+Normalize update folder, by removing trinkets and image prefix.
+#>
+function Normalize-Update {
+
+    [CmdletBinding()]
+    param ()
+
+    Flatten-File
+    Remove-Item * -Exclude '*.jpg' -Force
+    Remove-Prefix
+}
+Export-ModuleMember -Function Normalize-Update
