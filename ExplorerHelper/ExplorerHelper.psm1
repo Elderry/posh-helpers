@@ -86,3 +86,23 @@ function Normalize-Update {
     Remove-Prefix
 }
 Export-ModuleMember -Function Normalize-Update
+
+<#
+.SYNOPSIS
+Numerize image names in lexicographic order, instead the natural order that Explorer uses, so be careful.
+#>
+function Numerize-ImageName {
+
+    [CmdletBinding()]
+    param ()
+
+    $names = Get-ChildItem -Filter '*.jpg' | ForEach-Object { $_.Name }
+    if ($names.Length -eq 0) {
+        Return
+    }
+
+    for ($i = 0; $i -lt $names.Length; $i++) {
+        Rename-Item $names[$i] "$($i + 1).jpg"
+    }
+}
+Export-ModuleMember -Function Numerize-ImageName
