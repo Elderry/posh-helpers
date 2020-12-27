@@ -67,7 +67,8 @@ function Simplify-JpegName {
     $bases = $names | ForEach-Object { Split-Path -LeafBase $_ }
 
     $prefix = $bases[0]
-    ForEach ($name in $bases[1..$bases.Length]) {
+    $suffix = $bases[0]
+    ForEach ($name in $bases[1..($bases.Length - 1)]) {
         $range = [Math]::Min($prefix.Length, $name.Length) - 1
         ForEach ($i in (0..$range)) {
             if ($prefix[$i] -ne $name[$i]) {
@@ -75,11 +76,18 @@ function Simplify-JpegName {
                 break
             }
         }
-        if (!$prefix) { break }
+        ForEach ($i in (0..$range)) {
+            if ($suffix[$suffix.Length - $i - 1] -ne $name[$name.Length - $i - 1]) {
+                $suffix = $suffix.Substring($suffix.Length - $i, $i)
+                break
+            }
+        }
+        if (!$prefix -and !$suffix) { break }
     }
     $prefix = [Regex]::Escape($prefix)
+    $suffix = [Regex]::Escape($suffix)
 
-    $names | Rename-Item -NewName { $_ -replace "^${prefix}0*(.*)\.jpe?g$", '$1.jpg' }
+    $names | Rename-Item -NewName { $_ -replace "^${prefix}0*(.*)${suffix}\.jpe?g$", '$1.jpg' }
 }
 Export-ModuleMember -Function Simplify-JpegName
 
