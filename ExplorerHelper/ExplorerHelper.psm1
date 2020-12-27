@@ -6,15 +6,13 @@ function Flatten-File {
 
     [CmdletBinding()]
     param (
-        # Whether to operate recursively.
+        # Whether to write original path as prefix to files.
         [switch] $WithPrefix,
         # Whether to overwrite on existing file.
         [switch] $Force
     )
 
-    Get-ChildItem -Recurse -File | ForEach-Object {
-
-        if ($_.Directory.FullName -eq $PWD) { return }
+    Get-ChildItem -Recurse -File -Force | Where-Object { $_.Directory.FullName -ne $PWD } | ForEach-Object {
 
         $dest = if ($WithPrefix) {
             ($_.Directory.FullName -replace "$PWD\", '' | ForEach-Object { $_ -replace '\\', '_' }) + "_$($_.Name)"
@@ -101,7 +99,7 @@ function Normalize-Update {
     param ()
 
     Flatten-File
-    Remove-Item * -Exclude '*.jpg' -Force
-    Remove-Prefix
+    Remove-Item * -Exclude '*.jpg', '*.jpeg' -Force
+    Simplify-JpegName
 }
 Export-ModuleMember -Function Normalize-Update
