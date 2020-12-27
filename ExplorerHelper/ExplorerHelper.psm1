@@ -14,7 +14,7 @@ function Flatten-File {
 
     Get-ChildItem -Recurse -File | ForEach-Object {
 
-        if ($_.Directory.FullName -eq $PWD) { Return }
+        if ($_.Directory.FullName -eq $PWD) { return }
 
         $dest = if ($WithPrefix) {
             ($_.Directory.FullName -replace "$PWD\", '' | ForEach-Object { $_ -replace '\\', '_' }) + "_$($_.Name)"
@@ -26,7 +26,7 @@ function Flatten-File {
             if ($Force) { Remove-Item $dest }
             else {
                 Write-Warning "File [$dest] already exists, skipping..."
-                Return
+                return
             }
         }
 
@@ -44,15 +44,26 @@ function Trim-Directory($directory) {
 
 <#
 .SYNOPSIS
-Remove common prefix for jpg files.
+Simplify jpeg file names by removing prefix or overwrite order directly.
 #>
-function Remove-Prefix {
+function Simplify-JpegName {
 
     [CmdletBinding()]
-    param ()
+    param (
+        # Whether to overwrite original ordering, otherwise just remove the prefix.
+        [switch] $OverWrite
+    )
 
     $names = Get-ChildItem -Filter *.jpg | ForEach-Object { $_.Name }
-    if ($names.Length -lt 2) { Return }
+    if ($names.Length -lt 2) { return }
+
+    if ($OverWrite) {
+        for ($i = 0; $i -lt $names.Length; $i++) {
+            Rename-Item $names[$i] "$($i + 1).jpg"
+        }
+        return
+    }
+
     $bases = $names | ForEach-Object { Split-Path -LeafBase $_ }
 
     $prefix = $bases[0]
@@ -64,13 +75,13 @@ function Remove-Prefix {
                 break
             }
         }
-        if (!$prefix) { Return }
+        if (!$prefix) { break }
     }
     $prefix = [Regex]::Escape($prefix)
 
-    $names | Rename-Item -NewName { $_ -replace "${prefix}0*", '' }
+    $names | Rename-Item -NewName { $_ -replace "^${prefix}0*(.*)\.jpe?g$", '$1.jpg' }
 }
-Export-ModuleMember -Function Remove-Prefix
+Export-ModuleMember -Function Simplify-JpegName
 
 <#
 .SYNOPSIS
@@ -86,23 +97,3 @@ function Normalize-Update {
     Remove-Prefix
 }
 Export-ModuleMember -Function Normalize-Update
-
-<#
-.SYNOPSIS
-Numerize image names in lexicographic order, instead the natural order that Explorer uses, so be careful.
-#>
-function Numerize-ImageName {
-
-    [CmdletBinding()]
-    param ()
-
-    $names = Get-ChildItem -Filter '*.jpg' | ForEach-Object { $_.Name }
-    if ($names.Length -eq 0) {
-        Return
-    }
-
-    for ($i = 0; $i -lt $names.Length; $i++) {
-        Rename-Item $names[$i] "$($i + 1).jpg"
-    }
-}
-Export-ModuleMember -Function Numerize-ImageName
