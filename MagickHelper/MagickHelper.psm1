@@ -22,7 +22,7 @@ function Compress-Image {
     Get-ChildItem -Filter *.jpeg | Rename-Item -NewName { $_.Name -replace '.jpeg','.jpg' }
     $targets = Get-ChildItem -Filter *.jpg
     if (-not $targets) { return }
-    $targets | ForEach { $_.IsReadOnly = $false }
+    $targets | ForEach-Object { $_.IsReadOnly = $false }
 
     magick mogrify -monitor -strip -quality 85% *.jpg
     Convert-Image
@@ -52,7 +52,7 @@ function Convert-Image {
 
     $targets = Get-ChildItem .\* -Include *.png
     if (-not $targets) { return }
-    $targets | ForEach { $_.IsReadOnly = $false }
+    $targets | ForEach-Object { $_.IsReadOnly = $false }
 
     if (Get-ChildItem -Filter *.png) {
         magick mogrify -monitor -format jpg *.png
@@ -63,7 +63,7 @@ Export-ModuleMember -Function Convert-Image
 
 function Detect-Magick {
     if (Get-Command magick -ErrorAction SilentlyContinue) { Return }
-    Write-Error 'Imagemagick is not installed, please install it first.' `
+    Write-Error 'ImageMagick is not installed, please install it first.' `
         + 'Link at https://imagemagick.org/script/download.php'
     Exit
 }

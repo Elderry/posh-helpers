@@ -48,11 +48,11 @@ function Simplify-JpegName {
 
     [CmdletBinding()]
     param (
-        # Whether to overwrite original ordering, otherwise just remove the prefix.
+        # Whether to overwrite original ordering, or just remove prefix.
         [switch] $OverWrite
     )
 
-    $names = Get-ChildItem -Filter *.jpg | ForEach-Object { $_.Name }
+    $names = [NaturalSort]::Sort((Get-ChildItem -Filter *.jpg | Select-Object -ExpandProperty 'Name'))
     if ($names.Length -lt 2) { return }
 
     if ($OverWrite) {
@@ -103,3 +103,17 @@ function Normalize-Update {
     Simplify-JpegName
 }
 Export-ModuleMember -Function Normalize-Update
+
+Add-Type -TypeDefinition @"
+using System.Runtime.InteropServices;
+public static class NaturalSort
+{
+    [DllImport("Shlwapi.dll", CharSet = CharSet.Unicode)]
+    private static extern int StrCmpLogicalW(string psz1, string psz2);
+    public static string[] Sort(string[] array)
+    {
+        System.Array.Sort(array, (psz1, psz2) => StrCmpLogicalW(psz1, psz2));
+        return array;
+    }
+}
+"@
