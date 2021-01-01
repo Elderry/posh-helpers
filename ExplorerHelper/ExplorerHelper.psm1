@@ -56,8 +56,13 @@ function Simplify-JpegName {
     if ($names.Length -lt 2) { return }
 
     if ($OverWrite) {
-        for ($i = 0; $i -lt $names.Length; $i++) {
-            Rename-Item $names[$i] "$($i + 1).jpg"
+        # Here we can only use ',' as the array construction operator because '@()' will flatten the result.
+        # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators?#comma-operator-
+        $ToRenames = (0..($names.Length - 1)).ForEach({ ,($names[$_], "$($_ + 1).jpg") }).Where({ $_[0] -ne $_[1] })
+        while ($ToRenames.Length -gt 0) {
+            $Conflicts = $ToRenames.Where({ Test-Path $_[1] })
+            $ToRenames.Where({ !(Test-Path $_[1]) }).ForEach({ Rename-Item $_[0] $_[1] })
+            $ToRenames = $Conflicts
         }
         return
     }
