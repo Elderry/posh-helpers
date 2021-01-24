@@ -49,11 +49,26 @@ function Simplify-JpegName {
     [CmdletBinding()]
     param (
         # Whether to overwrite original ordering, or just remove prefix.
-        [switch] $OverWrite
+        [switch] $OverWrite,
+        # Whether to operate recursively.
+        [switch] $Recurse
     )
 
-    $names = [NaturalSort]::Sort((Get-ChildItem -Filter *.jpg | Select-Object -ExpandProperty 'Name'))
-    if ($names.Length -lt 2) { return }
+    if ($Recurse) {
+        (Get-ChildItem -Directory).ForEach({
+            Set-Location -LiteralPath $_.Name
+
+            $RecurseCommand = 'Simplify-JpegName -Recurse'
+            if ($OverWrite) { $RecurseCommand = $RecurseCommand + ' -OverWrite'}
+            Invoke-Expression $RecurseCommand
+
+            Set-Location ..
+        })
+    }
+
+    $names = Get-ChildItem -Filter *.jpg | Select-Object -ExpandProperty 'Name'
+    if ($names.Count -lt 2) { return }
+    $names = [NaturalSort]::Sort($names)
 
     if ($OverWrite) {
         # Here we can only use ',' as the array construction operator because '@()' will flatten the result.
@@ -90,7 +105,10 @@ function Simplify-JpegName {
     $prefix = [Regex]::Escape($prefix)
     $suffix = [Regex]::Escape($suffix)
 
-    $names | Rename-Item -NewName { $_ -replace "^${prefix}0*(.*)${suffix}\.jpe?g$", '$1.jpg' }
+    $names.ForEach({
+        $NewName = $_ -replace "^${prefix}0*(.*)${suffix}\.jpe?g$", '$1.jpg'
+        if ($NewName -ne $_) { Rename-Item $_ $NewName }
+    })
 }
 Export-ModuleMember -Function Simplify-JpegName
 
