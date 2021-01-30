@@ -6,12 +6,23 @@ WinRAR reference as here: https://documentation.help/WinRAR/
 function Archive-Update {
 
     [CmdletBinding()]
-    param ()
+    param (
+        # Whether to put each file to separate archive.
+        [switch] $Separate
+    )
     Detect-WinRAR
 
-    $Archive = (Split-Path -Leaf $PWD) + '.rar'
-    $PasswordFile = '~/OneDrive/Collections/AppBackup/WinRAR/An1.txt'
-    Get-Content $PasswordFile | rar m -hp -s -v1g $Archive './'
+    $Password = Get-Content '~/OneDrive/Collections/AppBackup/WinRAR/An1.txt'
+
+    if ($Separate) {
+        Get-ChildItem -File | ForEach-Object {
+            $Archive = (Split-Path -LeafBase $_.Name) + '.rar'
+            rar m "-hp$Password" -s -v1g $Archive $_.Name
+        }
+    } else {
+        $Archive = (Split-Path -Leaf $PWD) + '.rar'
+        rar m "-hp$Password" -s -v1g $Archive './'
+    }
 }
 Export-ModuleMember -Function Archive-Update
 
