@@ -19,10 +19,15 @@ function Archive-Update {
             $Archive = (Split-Path -LeafBase $_.Name) + '.rar'
             rar m "-hp$Password" -s -v1g $Archive $_.Name
         }
-    } else {
-        $Archive = (Split-Path -Leaf $PWD) + '.rar'
-        rar m "-hp$Password" -s -v1g $Archive './'
+        Get-ChildItem -Directory | ForEach-Object {
+            $Archive = $_.Name + '.rar'
+            rar m "-hp$Password" -s -v1g $Archive $_.Name
+        }
+        return
     }
+
+    $Archive = (Split-Path -Leaf $PWD) + '.rar'
+    rar m "-hp$Password" -r -s -v1g $Archive './'
 }
 Export-ModuleMember -Function Archive-Update
 
