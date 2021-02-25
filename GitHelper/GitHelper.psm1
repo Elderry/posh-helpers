@@ -90,10 +90,9 @@ function git_push {
     }
 
     Write-Host $FirstTry -Separator "`n"
-    Write-Host
 
     if ($FirstTry[3] -Match '^\s*(git push --set-upstream origin \S+)$') {
-        Write-Host "The push is recoverable, going to retry..."
+        Write-Host "`nThe push is recoverable, going to retry...`n"
         Invoke-Expression $Matches[1]
     }
 }
