@@ -31,7 +31,9 @@ Export-ModuleMember -Function Compress-Image
 
 <#
 .SYNOPSIS
-Convert all images into jpg format.
+Convert all images into jpg format, currently support format:
+    - jpeg (rename only)
+    - png
 #>
 function Convert-Image {
 
@@ -50,7 +52,9 @@ function Convert-Image {
         }
     }
 
-    $targets = Get-ChildItem .\* -Include *.png
+    Get-ChildItem -Filter *.jpeg | Rename-Item -NewName { $_.Name -replace '.jpeg','.jpg' }
+
+    $targets = Get-ChildItem -Filter *.png
     if (-not $targets) { return }
     $targets | ForEach-Object { $_.IsReadOnly = $false }
 

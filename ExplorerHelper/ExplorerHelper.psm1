@@ -66,7 +66,7 @@ function Simplify-JpegName {
         })
     }
 
-    $names = Get-ChildItem -Filter *.jpg | Select-Object -ExpandProperty 'Name'
+    $names = Get-ChildItem ./* -Include ('*.jpg', '*.jpeg') | Select-Object -ExpandProperty 'Name'
     if ($names.Count -lt 2) { return }
     $names = [NaturalSort]::Sort($names)
 
