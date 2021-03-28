@@ -19,7 +19,7 @@ function Compress-Image {
         }
     }
 
-    Get-ChildItem -Filter *.jpeg | Rename-Item -NewName { $_.Name -replace '.jpeg','.jpg' }
+    Get-ChildItem -Filter *.jpeg | Rename-Item -NewName { $_.Name -replace '.jpeg', '.jpg' }
     $targets = Get-ChildItem -Filter *.jpg
     if (-not $targets) { return }
     $targets | ForEach-Object { $_.IsReadOnly = $false }
@@ -52,7 +52,7 @@ function Convert-Image {
         }
     }
 
-    Get-ChildItem -Filter *.jpeg | Rename-Item -NewName { $_.Name -replace '.jpeg','.jpg' }
+    Get-ChildItem -Filter *.jpeg | Rename-Item -NewName { $_.Name -replace '.jpeg', '.jpg' }
 
     $targets = Get-ChildItem -Filter *.png
     if (-not $targets) { return }
