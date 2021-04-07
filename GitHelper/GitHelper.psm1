@@ -36,7 +36,7 @@ function git_prune {
     $Red = "`e[91m"
     $Reset = "`e[0m"
     Write-Host "Going to ${Red}delete$Reset these branches:"
-    Write-Host $Branches
+    Write-Host $Branches -Separator "`n"
 
     $Question = 'Are you sure you want to proceed?'
     $Choices = '&Yes', '&No'
