@@ -122,10 +122,31 @@ function Normalize-Update {
     param ()
 
     Flatten-File
-    Remove-Item * -Exclude '*.jpg', '*.jpeg' -Force
+    Remove-Item * -Exclude '*.jpg', '*.jpeg', '*.png' -Force
     Simplify-JpegName
 }
 Export-ModuleMember -Function Normalize-Update
+
+<#
+.SYNOPSIS
+Format byte size for human readable.
+#>
+function Format-ByteSize {
+
+    [CmdletBinding()]
+    param ([double] $Size)
+
+    $Suffix = ('B', 'KB', 'MB', 'GB', 'TB')
+    $Index = 0;
+    while ($Size -gt 1kb)
+    {
+        $Size = $Size / 1kb
+        $Index++
+    } 
+
+    "{0:0.##}{1}" -f $Size, $Suffix[$Index]
+}
+Export-ModuleMember -Function Format-ByteSize
 
 Add-Type -TypeDefinition @"
 using System.Runtime.InteropServices;

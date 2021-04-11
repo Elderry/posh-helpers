@@ -1,6 +1,9 @@
+$GREEN = "`e[32m"
+$RESET = "`e[0m"
+
 <#
 .SYNOPSIS
-Convert all images into jpg format, then compress them with metadata stripped and quality drop to 85%.
+Compress jpeg image files with metadata stripped and quality drop to 85%.
 #>
 function Compress-Image {
 
@@ -12,20 +15,33 @@ function Compress-Image {
     Detect-Magick
 
     if ($Recurse) {
-        Get-ChildItem -Directory | ForEach-Object {
+        (Get-ChildItem -Directory).ForEach({
             Set-Location -LiteralPath $_.Name
             Compress-Image -Recurse
             Set-Location ..
-        }
+        })
     }
 
-    Get-ChildItem -Filter *.jpeg | Rename-Item -NewName { $_.Name -replace '.jpeg', '.jpg' }
-    $targets = Get-ChildItem -Filter *.jpg
-    if (-not $targets) { return }
-    $targets | ForEach-Object { $_.IsReadOnly = $false }
+    (Get-ChildItem -Filter *.jpeg).ForEach({ Rename-Item $_.Name ($_.Name -replace '.jpeg', '.jpg') })
+    $Targets = Get-ChildItem -Filter *.jpg
+    if (-not $Targets) { return }
+    $Targets.ForEach({ $_.IsReadOnly = $false })
+
+    $TotalSizeBefore = ($Targets | Measure-Object -Property Length -Sum).Sum
+    $TotalSizeString = Format-ByteSize $TotalSizeBefore
+    Write-Host (
+        "Going to compress [$GREEN$($Targets.Count)$RESET] images," +
+        " with the total size of [$GREEN$TotalSizeString$RESET].")
 
     magick mogrify -monitor -strip -quality 85% *.jpg
-    Convert-Image
+
+    $Targets = Get-ChildItem -Filter *.jpg
+    $TotalSizeAfter = ($Targets | Measure-Object -Property Length -Sum).Sum
+    $TotalSizeString = Format-ByteSize $TotalSizeAfter
+    $Ratio = "{0:P}" -f ($TotalSizeAfter / $TotalSizeBefore)
+    Write-Host (
+        "Compression of [$GREEN$($Targets.Count)$RESET] images finished," +
+        " with the total size of [$GREEN$TotalSizeString$RESET] at compression ratio of [$GREEN$Ratio$RESET].")
 }
 Export-ModuleMember -Function Compress-Image
 
@@ -67,7 +83,8 @@ Export-ModuleMember -Function Convert-Image
 
 function Detect-Magick {
     if (Get-Command magick -ErrorAction SilentlyContinue) { Return }
-    Write-Error 'ImageMagick is not installed, please install it first.' `
-        + 'Link at https://imagemagick.org/script/download.php'
+    Write-Error (
+        'ImageMagick is not installed, please install it first.' +
+        ' Link at https://imagemagick.org/script/download.php')
     Exit
 }
