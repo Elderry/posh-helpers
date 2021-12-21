@@ -7,7 +7,7 @@ function Start-GnuPGAgent {
 
     [CmdletBinding()]
     param ()
-    Detect-GnuPG
+    Test-GnuPG
 
     $GPGStatus = gpg-agent 2>&1
     # If output is redirected from error output channel, it will be a collection of ErrorRecord, convert them to String
@@ -24,7 +24,7 @@ function Start-GnuPGAgent {
 }
 Export-ModuleMember -Function Start-GnuPGAgent
 
-function Detect-GnuPG {
+function Test-GnuPG {
     if (Get-Command gpg -ErrorAction SilentlyContinue) { Return }
     Write-Error 'GnuPG is not installed, please install it first.' `
         + 'Link at https://www.gnupg.org/download/index.html'

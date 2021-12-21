@@ -3,7 +3,7 @@
 Archive update using WinRAR.
 WinRAR reference as here: https://documentation.help/WinRAR/
 #>
-function Compress-UpdateArchive {
+function Archive-Update {
 
     [CmdletBinding()]
     param (
@@ -12,7 +12,7 @@ function Compress-UpdateArchive {
         # Whether to create archive under each directory.
         [switch] $SeparateFolder
     )
-    Find-WinRAR
+    Test-WinRAR
 
     $Password = Get-Content '~/OneDrive/Collections/AppBackup/WinRAR/An1.txt'
 
@@ -31,7 +31,7 @@ function Compress-UpdateArchive {
     if ($SeparateFolder) {
         Get-ChildItem -Directory | ForEach-Object {
             Set-Location -LiteralPath $_.Name
-            Compress-UpdateArchive
+            Archive-Update
             Set-Location ..
         }
         return
@@ -40,9 +40,9 @@ function Compress-UpdateArchive {
     $Archive = (Split-Path -Leaf $PWD) + '.rar'
     rar m "-hp$Password" -r -s -v1g $Archive './'
 }
-Export-ModuleMember -Function Compress-UpdateArchive
+Export-ModuleMember -Function Archive-Update
 
-function Find-WinRAR {
+function Test-WinRAR {
     if (Get-Command 'rar' -ErrorAction SilentlyContinue) { Return }
     Write-Error 'WinRAR is not installed, please install it first.' `
         + 'Link at https://www.win-rar.com/download.html'

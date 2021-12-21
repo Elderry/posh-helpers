@@ -12,7 +12,7 @@ function Compress-Image {
         # Whether to operate recursively.
         [switch] $Recurse
     )
-    Detect-Magick
+    Test-Magick
 
     if ($Recurse) {
         (Get-ChildItem -Directory).ForEach({
@@ -27,21 +27,29 @@ function Compress-Image {
     if (-not $Targets) { return }
     $Targets.ForEach({ $_.IsReadOnly = $false })
 
-    $TotalSizeBefore = ($Targets | Measure-Object -Property Length -Sum).Sum
-    $TotalSizeString = Format-ByteSize $TotalSizeBefore
+    $SizeBefore = ($Targets | Measure-Object -Property Length -Sum).Sum
+    $SizeBeforeString = Format-ByteSize $SizeBefore
     Write-Host (
         "Going to compress [$GREEN$($Targets.Count)$RESET] images," +
-        " with the total size of [$GREEN$TotalSizeString$RESET].")
+        " with the total size of [$GREEN$SizeBeforeString$RESET].")
+    $Question = 'Are you sure you want to proceed?'
+    $Choices = '&Yes', '&No'
+    $Decision = $Host.UI.PromptForChoice('', $Question, $Choices, 1)
+    if ($Decision -ne 0) {
+        exit
+    }
 
     magick mogrify -monitor -strip -quality 85% *.jpg
 
     $Targets = Get-ChildItem -Filter *.jpg
-    $TotalSizeAfter = ($Targets | Measure-Object -Property Length -Sum).Sum
-    $TotalSizeString = Format-ByteSize $TotalSizeAfter
-    $Ratio = "{0:P}" -f ($TotalSizeAfter / $TotalSizeBefore)
+    $SizeAfter = ($Targets | Measure-Object -Property Length -Sum).Sum
+    $SizeAfterString = Format-ByteSize $SizeAfter
+    $Ratio = "{0:P}" -f ($SizeAfter / $SizeBefore)
     Write-Host (
-        "Compression of [$GREEN$($Targets.Count)$RESET] images finished," +
-        " with the total size of [$GREEN$TotalSizeString$RESET] at compression ratio of [$GREEN$Ratio$RESET].")
+        "`nCompression of [$GREEN$($Targets.Count)$RESET] images finished`n" +
+        "Total size before: [$GREEN$SizeBeforeString$RESET]`n" +
+        "Total size after: [$GREEN$SizeAfterString$RESET]`n" +
+        "Compression ratio: [$GREEN$Ratio$RESET]")
 }
 Export-ModuleMember -Function Compress-Image
 
@@ -58,7 +66,7 @@ function Convert-Image {
         # Whether to operate recursively.
         [switch] $Recurse
     )
-    Detect-Magick
+    Test-Magick
 
     if ($Recurse) {
         Get-ChildItem -Directory | ForEach-Object {
@@ -81,7 +89,7 @@ function Convert-Image {
 }
 Export-ModuleMember -Function Convert-Image
 
-function Detect-Magick {
+function Test-Magick {
     if (Get-Command magick -ErrorAction SilentlyContinue) { Return }
     Write-Error (
         'ImageMagick is not installed, please install it first.' +
