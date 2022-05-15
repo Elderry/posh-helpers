@@ -22,7 +22,7 @@ function Remove-Registry {
     }
 
     if (-not(Test-Path -LiteralPath $Path)) {
-        Write-Verbose "Given path [$RED$Path$RESET] doesn't exist, exiting..."
+        Write-Verbose "Given path [$RED$Path$RESET] doesn't exist, skipping..."
         return
     }
 
