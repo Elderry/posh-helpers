@@ -10,21 +10,24 @@ function Compress-Image {
     [CmdletBinding()]
     param (
         # Whether to operate recursively.
-        [switch] $Recurse
+        [switch] $Recurse,
+        # Whether to bypass prompt, default is $false, override to $true if $Recurse is set.
+        [alias('y')]
+        [switch] $BypassPrompt
     )
     Test-Magick
 
     if ($Recurse) {
         (Get-ChildItem -Directory).ForEach({
             Set-Location -LiteralPath $_.Name
-            Compress-Image -Recurse
+            Compress-Image -Recurse -BypassPrompt
             Set-Location ..
         })
     }
 
     (Get-ChildItem -Filter *.jpeg).ForEach({ Rename-Item $_.Name ($_.Name -replace '.jpeg', '.jpg') })
     $Targets = Get-ChildItem -Filter *.jpg
-    if (-not $Targets) { return }
+    if (!$Targets) { return }
     $Targets.ForEach({ $_.IsReadOnly = $false })
 
     $SizeBefore = ($Targets | Measure-Object -Property Length -Sum).Sum
@@ -32,11 +35,15 @@ function Compress-Image {
     Write-Host (
         "Going to compress [$GREEN$($Targets.Count)$RESET] images," +
         " with the total size of [$GREEN$SizeBeforeString$RESET].")
-    $Question = 'Are you sure you want to proceed?'
-    $Choices = '&Yes', '&No'
-    $Decision = $Host.UI.PromptForChoice('', $Question, $Choices, 1)
-    if ($Decision -ne 0) {
-        exit
+
+    $BypassPrompt = $BypassPrompt -or $Recurse
+    if (!$BypassPrompt) {
+        $Question = 'Are you sure you want to proceed?'
+        $Choices = '&Yes', '&No'
+        $Decision = $Host.UI.PromptForChoice('', $Question, $Choices, 1)
+        if ($Decision -ne 0) {
+            return
+        }
     }
 
     magick mogrify -monitor -strip -quality 85% *.jpg
@@ -69,17 +76,17 @@ function Convert-Image {
     Test-Magick
 
     if ($Recurse) {
-        Get-ChildItem -Directory | ForEach-Object {
+        (Get-ChildItem -Directory).ForEach({
             Set-Location -LiteralPath $_.Name
             Convert-Image -Recurse
             Set-Location ..
-        }
+        })
     }
 
     Get-ChildItem -Filter *.jpeg | Rename-Item -NewName { $_.Name -replace '.jpeg', '.jpg' }
 
     $targets = Get-ChildItem -Filter *.png
-    if (-not $targets) { return }
+    if (!$targets) { return }
     $targets | ForEach-Object { $_.IsReadOnly = $false }
 
     if (Get-ChildItem -Filter *.png) {
@@ -90,9 +97,9 @@ function Convert-Image {
 Export-ModuleMember -Function Convert-Image
 
 function Test-Magick {
-    if (Get-Command magick -ErrorAction SilentlyContinue) { Return }
+    if (Get-Command magick -ErrorAction SilentlyContinue) { return }
     Write-Error (
         'ImageMagick is not installed, please install it first.' +
         ' Link at https://imagemagick.org/script/download.php')
-    Exit
+    exit
 }

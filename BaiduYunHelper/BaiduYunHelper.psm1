@@ -19,12 +19,12 @@ function Clean-BaiduYun {
     @(
         (Join-Path $Env:APPDATA 'baidu/BaiduNetdisk/YunOfficeAddin.dll'),
         (Join-Path $Env:APPDATA 'baidu/BaiduNetdisk/YunOfficeAddin64.dll')
-    ) |
-    Where-Object { Test-Path $_ } |
-    ForEach-Object {
+    ).Where({
+        Test-Path $_
+    }).ForEach({
         Write-Host "Path [$RED$_$RESET] detected, going to remove..."
         Remove-Item -LiteralPath $_ -Recurse
         Write-Host "Path [$RED$_$RESET] removed."
-    }
+    })
 }
 Export-ModuleMember -Function Clean-BaiduYun
