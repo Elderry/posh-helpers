@@ -7,20 +7,21 @@ Compress jpeg image files with metadata stripped and quality drop to 85%.
 #>
 function Compress-Image {
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param (
         # Whether to operate recursively.
         [switch] $Recurse,
         # Whether to bypass prompt, default is $false, override to $true if $Recurse is set.
-        [alias('y')]
-        [switch] $BypassPrompt
+        [alias('f')]
+        [switch] $Force
     )
-    Test-Magick
+    if (!(Test-Magick)) { return }
+    if ($Force) { $ConfirmPreference = 'None' }
 
     if ($Recurse) {
         (Get-ChildItem -Directory).ForEach({
             Set-Location -LiteralPath $_.Name
-            Compress-Image -Recurse -BypassPrompt
+            Compress-Image -Recurse -Force:$Force
             Set-Location ..
         })
     }
@@ -36,15 +37,8 @@ function Compress-Image {
         "Going to compress [$GREEN$($Targets.Count)$RESET] images," +
         " with the total size of [$GREEN$SizeBeforeString$RESET].")
 
-    $BypassPrompt = $BypassPrompt -or $Recurse
-    if (!$BypassPrompt) {
-        $Question = 'Are you sure you want to proceed?'
-        $Choices = '&Yes', '&No'
-        $Decision = $Host.UI.PromptForChoice('', $Question, $Choices, 1)
-        if ($Decision -ne 0) {
-            return
-        }
-    }
+    $CurrentDirectory = (Get-Location | Get-Item).Name
+    if (!$PSCmdlet.ShouldProcess($CurrentDirectory)) { return }
 
     magick mogrify -monitor -strip -quality 85% *.jpg
 
@@ -73,7 +67,7 @@ function Convert-Image {
         # Whether to operate recursively.
         [switch] $Recurse
     )
-    Test-Magick
+    if (!Test-Magick) { return }
 
     if ($Recurse) {
         (Get-ChildItem -Directory).ForEach({
@@ -97,9 +91,8 @@ function Convert-Image {
 Export-ModuleMember -Function Convert-Image
 
 function Test-Magick {
-    if (Get-Command magick -ErrorAction SilentlyContinue) { return }
+    if (Get-Command magick -ErrorAction SilentlyContinue) { return $true }
     Write-Error (
         'ImageMagick is not installed, please install it first.' +
         ' Link at https://imagemagick.org/script/download.php')
-    exit
 }

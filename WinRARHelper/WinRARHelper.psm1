@@ -12,7 +12,7 @@ function Archive-Update {
         # Whether to create archive under each directory.
         [switch] $SeparateFolder
     )
-    Test-WinRAR
+    if (!(Test-WinRAR)) { return }
 
     $Password = Get-Content '~/OneDrive/Collections/AppBackup/WinRAR/An1.txt'
 
@@ -43,8 +43,7 @@ function Archive-Update {
 Export-ModuleMember -Function Archive-Update
 
 function Test-WinRAR {
-    if (Get-Command 'rar' -ErrorAction SilentlyContinue) { Return }
+    if (Get-Command 'rar' -ErrorAction SilentlyContinue) { return $true }
     Write-Error 'WinRAR is not installed, please install it first.' `
         + 'Link at https://www.win-rar.com/download.html'
-    Exit
 }
