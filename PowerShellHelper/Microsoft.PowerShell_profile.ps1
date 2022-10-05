@@ -42,11 +42,14 @@ $GitPromptSettings.LocalWorkingStatusSymbol.ForegroundColor = [ConsoleColor]::Re
 $GitPromptSettings.IndexColor.ForegroundColor = [ConsoleColor]::Green
 $GitPromptSettings.WorkingColor.ForegroundColor = [ConsoleColor]::Red
 
+$Gray = "`e[38;5;250m"
 Set-PSReadLineOption -Colors @{
+    'ContinuationPrompt' = [ConsoleColor]::DarkMagenta
+    'Default' = [ConsoleColor]::Black
+    'InlinePrediction' = $Gray
     'Number' = [ConsoleColor]::Green
     'Member' = [ConsoleColor]::Magenta
     'Type' = [ConsoleColor]::DarkYellow
-    'ContinuationPrompt' = [ConsoleColor]::DarkMagenta
 }
 
 function IsAdmin {
