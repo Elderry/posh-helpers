@@ -1,4 +1,5 @@
 $GREEN = "`e[32m"
+$BLUE = "`e[34m"
 $RESET = "`e[0m"
 
 <#
@@ -23,7 +24,7 @@ function Compress-Image {
     if ($Recurse) {
         (Get-ChildItem -Directory).ForEach({
             Set-Location -LiteralPath $_.Name
-            Compress-Image -Recurse -Force:$Force
+            Compress-Image -Recurse -Force:$Force -LimitSize:$LimitSize
             Set-Location ..
         })
     }
@@ -35,11 +36,10 @@ function Compress-Image {
 
     $SizeBefore = ($Targets | Measure-Object -Property Length -Sum).Sum
     $SizeBeforeString = Format-ByteSize $SizeBefore
-    Write-Host (
-        "Going to compress [$GREEN$($Targets.Count)$RESET] images," +
-        " with the total size of [$GREEN$SizeBeforeString$RESET].")
-
     $CurrentDirectory = (Get-Item -LiteralPath (Get-Location).Path).Name
+    Write-Host (
+        "Going to compress [$GREEN$($Targets.Count)$RESET] images in folder [$BLUE$CurrentDirectory$RESET]," +
+        " with the total size of [$GREEN$SizeBeforeString$RESET].")
     if (!$PSCmdlet.ShouldProcess($CurrentDirectory)) { return }
 
     $Options = '-monitor -strip -quality 85%'
@@ -51,7 +51,7 @@ function Compress-Image {
     $SizeAfterString = Format-ByteSize $SizeAfter
     $Ratio = "{0:P}" -f ($SizeAfter / $SizeBefore)
     Write-Host (
-        "`nCompression of [$GREEN$($Targets.Count)$RESET] images finished`n" +
+        "`nCompression of [$GREEN$($Targets.Count)$RESET] images in folder [$BLUE$CurrentDirectory$RESET] finished`n" +
         "Total size before: [$GREEN$SizeBeforeString$RESET]`n" +
         "Total size after: [$GREEN$SizeAfterString$RESET]`n" +
         "Compression ratio: [$GREEN$Ratio$RESET]")
