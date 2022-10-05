@@ -37,7 +37,7 @@ function Compress-Image {
         "Going to compress [$GREEN$($Targets.Count)$RESET] images," +
         " with the total size of [$GREEN$SizeBeforeString$RESET].")
 
-    $CurrentDirectory = (Get-Location | Get-Item).Name
+    $CurrentDirectory = (Get-Item -LiteralPath (Get-Location).Path).Name
     if (!$PSCmdlet.ShouldProcess($CurrentDirectory)) { return }
 
     magick mogrify -monitor -strip -quality 85% *.jpg
@@ -67,7 +67,7 @@ function Convert-Image {
         # Whether to operate recursively.
         [switch] $Recurse
     )
-    if (!Test-Magick) { return }
+    if (!(Test-Magick)) { return }
 
     if ($Recurse) {
         (Get-ChildItem -Directory).ForEach({
