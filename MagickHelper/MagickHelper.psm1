@@ -13,7 +13,9 @@ function Compress-Image {
         [switch] $Recurse,
         # Whether to bypass prompt, default is $false, override to $true if $Recurse is set.
         [alias('f')]
-        [switch] $Force
+        [switch] $Force,
+        # Whether to limit image size to 4K scale.
+        [switch] $LimitSize
     )
     if (!(Test-Magick)) { return }
     if ($Force) { $ConfirmPreference = 'None' }
@@ -40,7 +42,9 @@ function Compress-Image {
     $CurrentDirectory = (Get-Item -LiteralPath (Get-Location).Path).Name
     if (!$PSCmdlet.ShouldProcess($CurrentDirectory)) { return }
 
-    magick mogrify -monitor -strip -quality 85% *.jpg
+    $Options = '-monitor -strip -quality 85%'
+    if ($LimitSize) { $Options += ' -resize 3840x3840' }
+    Invoke-Expression "magick mogrify $Options *.jpg"
 
     $Targets = Get-ChildItem -Filter *.jpg
     $SizeAfter = ($Targets | Measure-Object -Property Length -Sum).Sum
