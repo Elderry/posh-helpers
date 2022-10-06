@@ -148,6 +148,36 @@ function Format-ByteSize {
 }
 Export-ModuleMember -Function Format-ByteSize
 
+function Select-DirectoriesWithTopSize {
+
+    [CmdletBinding()]
+    param ([int] $Top = 10)
+
+    Get-ChildItem -Directory |
+        ForEach-Object {
+            $AllFiles = Get-ChildItem $_.Name -Recurse
+            $TotalSize = ($AllFiles | Measure-Object -Property Length -Sum).Sum
+            $AverageSize = $TotalSize / $AllFiles.Length
+            $SamplePath = $AllFiles[0].FullName
+            return [PSCustomObject] @{
+                Name = $_.Name
+                TotalSize = $TotalSize
+                AverageSize = $AverageSize
+                SamplePath = $SamplePath
+            }
+        } |
+        Sort-Object -Descending -Property TotalSize -Top $Top |
+        ForEach-Object {
+            return [PSCustomObject] @{
+                Name = $_.Name
+                TotalSize = Format-ByteSize $_.TotalSize
+                AverageSize = Format-ByteSize $_.AverageSize
+                SampleDimension = magick identify -format '%wx%h' $_.SamplePath
+            }
+        }
+}
+Export-ModuleMember -Function Select-DirectoriesWithTopSize
+
 Add-Type -TypeDefinition @"
 using System.Runtime.InteropServices;
 public static class NaturalSort
