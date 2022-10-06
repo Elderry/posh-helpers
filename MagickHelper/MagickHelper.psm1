@@ -113,7 +113,7 @@ function Select-ImageDirectoriesWithTopSize {
 
     Get-ChildItem -Directory |
         ForEach-Object {
-            $AllFiles = Get-ChildItem $_.Name -Recurse
+            $AllFiles = Get-ChildItem $_.Name -File -Recurse
             $TotalSize = ($AllFiles | Measure-Object -Property Length -Sum).Sum
             $AverageSize = $TotalSize / $AllFiles.Length
             $SamplePath = $AllFiles[0].FullName
