@@ -1,3 +1,4 @@
+$RED = "`e[31m"
 $GREEN = "`e[32m"
 $BLUE = "`e[34m"
 $RESET = "`e[0m"
@@ -43,7 +44,18 @@ function Compress-Image {
     if (!$PSCmdlet.ShouldProcess($CurrentDirectory)) { return }
 
     $Options = '-monitor -strip -quality 85%'
+    if (!$LimitSize) {
+        $SamplePath = $Targets[0].FullName
+        $SampleWidth = (magick identify -format '%w' $SamplePath) -as [int]
+        $SampleHeight = (magick identify -format '%h' $SamplePath) -as [int]
+        if (($SampleWidth -ge 4000) -or ($SampleHeight -ge 4000)) {
+            $ConfirmMessage = "Sample dimension is [$RED${SampleWidth}x${SampleHeight}$RESET], it is suggested to limit compression size."
+            if ($PSCmdlet.ShouldProcess('Compress-Image -LimitSize', $ConfirmMessage, $CurrentDirectory))
+                { $LimitSize = $true }
+        }
+    }
     if ($LimitSize) { $Options += ' -resize 3840x3840' }
+
     Invoke-Expression "magick mogrify $Options *.jpg"
 
     $Targets = Get-ChildItem -Filter *.jpg
@@ -93,6 +105,36 @@ function Convert-Image {
     Remove-Item *.png
 }
 Export-ModuleMember -Function Convert-Image
+
+function Select-ImageDirectoriesWithTopSize {
+
+    [CmdletBinding()]
+    param ([int] $Top = 10)
+
+    Get-ChildItem -Directory |
+        ForEach-Object {
+            $AllFiles = Get-ChildItem $_.Name -Recurse
+            $TotalSize = ($AllFiles | Measure-Object -Property Length -Sum).Sum
+            $AverageSize = $TotalSize / $AllFiles.Length
+            $SamplePath = $AllFiles[0].FullName
+            return [PSCustomObject] @{
+                Name = $_.Name
+                TotalSize = $TotalSize
+                AverageSize = $AverageSize
+                SamplePath = $SamplePath
+            }
+        } |
+        Sort-Object -Descending -Property TotalSize -Top $Top |
+        ForEach-Object {
+            return [PSCustomObject] @{
+                Name = $_.Name
+                TotalSize = Format-ByteSize $_.TotalSize
+                AverageSize = Format-ByteSize $_.AverageSize
+                SampleDimension = magick identify -format '%wx%h' $_.SamplePath
+            }
+        }
+}
+Export-ModuleMember -Function Select-ImageDirectoriesWithTopSize
 
 function Test-Magick {
     if (Get-Command magick -ErrorAction SilentlyContinue) { return $true }
