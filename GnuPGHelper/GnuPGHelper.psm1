@@ -26,6 +26,6 @@ Export-ModuleMember -Function Start-GnuPGAgent
 
 function Test-GnuPG {
     if (Get-Command gpg -ErrorAction SilentlyContinue) { return $true }
-    Write-Error 'GnuPG is not installed, please install it first.' `
-        + 'Link at https://www.gnupg.org/download/index.html'
+    Write-Error ('GnuPG is not installed, please install it first.' `
+        + ' Link at https://www.gnupg.org/download/index.html')
 }

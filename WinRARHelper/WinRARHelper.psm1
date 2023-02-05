@@ -44,6 +44,6 @@ Export-ModuleMember -Function Archive-Update
 
 function Test-WinRAR {
     if (Get-Command 'rar' -ErrorAction SilentlyContinue) { return $true }
-    Write-Error 'WinRAR is not installed, please install it first.' `
-        + 'Link at https://www.win-rar.com/download.html'
+    Write-Error ('WinRAR is not installed, please install it first.' `
+        + ' Link at https://www.win-rar.com/download.html')
 }
