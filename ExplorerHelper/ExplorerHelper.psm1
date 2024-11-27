@@ -15,7 +15,7 @@ function Flatten-File {
     Get-ChildItem -Recurse -File -Force | Where-Object { $_.Directory.FullName -ne $PWD } | ForEach-Object {
 
         $dest = if ($WithPrefix) {
-            ($_.Directory.FullName -replace "$PWD\", '' | ForEach-Object { $_ -replace '\\', '_' }) + "_$($_.Name)"
+            ($_.Directory.FullName -replace [Regex]::Escape("$PWD\"), '' | ForEach-Object { $_ -replace '\\', '_' }) + "_$($_.Name)"
         } else {
             "$PWD/$($_.Name)"
         }
